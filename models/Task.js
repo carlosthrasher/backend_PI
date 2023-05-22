@@ -4,7 +4,7 @@ const mongoose = require("../db/conn");
 const taskSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     name: {type: String, required: true},
-    difficulty: { type: String, enum: ['easy', 'medium', 'difficult'] },
+    difficulty: { type: String, enum: ['Fácil', 'Médio', 'Difícil'] },
     hours: Number
   });
 
