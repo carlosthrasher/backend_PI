@@ -56,64 +56,67 @@ module.exports = class TaskController {
 
   static async createSchedule(req, res) {
     try {
-      const tasks = await Task.find({ user: req.user.id });
-  
-      // Calculate the total time for each difficulty level
-      let totalEasyTime = 0;
-      let totalMediumTime = 0;
-      let totalHardTime = 0;
-      tasks.forEach(task => {
-        if (task.difficulty === 'Fácil') {
-          totalEasyTime += task.hours;
-        } else if (task.difficulty === 'Médio') {
-          totalMediumTime += task.hours;
-        } else if (task.difficulty === 'Difícil') {
-          totalHardTime += task.hours;
-        }
+    const tasks = await Task.find({ user: req.user.id });
+
+    // Calculate the total time for each difficulty level
+    let totalEasyTime = 0;
+    let totalMediumTime = 0;
+    let totalHardTime = 0;
+    tasks.forEach(task => {
+      if (task.difficulty === 'easy') {
+        totalEasyTime += task.hours;
+      } else if (task.difficulty === 'medium') {
+        totalMediumTime += task.hours;
+      } else if (task.difficulty === 'hard') {
+        totalHardTime += task.hours;
+      }
+    });
+
+    // Calculate the percentage of time for each difficulty level
+    const totalTime = totalEasyTime + totalMediumTime + totalHardTime;
+    const easyPercentage = totalEasyTime / totalTime;
+    const mediumPercentage = totalMediumTime / totalTime;
+    const hardPercentage = totalHardTime / totalTime;
+
+    // Distribute the available time based on difficulty levels
+    const user = await User.findById(req.user.id);
+    const availableTime = user.availableTime;
+    const schedule = {
+      easyTasks: [],
+      mediumTasks: [],
+      hardTasks: []
+    };
+
+    schedule.easyTasks = tasks
+      .filter(task => task.difficulty === 'easy')
+      .map(task => {
+        return {
+          ...task.toObject(),
+          time: Math.round(availableTime * easyPercentage * (task.hours / totalEasyTime))
+        };
       });
-      
-      const totalTime = totalEasyTime + totalMediumTime + totalHardTime;
-      const easyPercentage = 0.2
-      const mediumPercentage = 0.3
-      const hardPercentage = 0.5
-  
-      
-      const schedule = {
-        easyTasks: [],
-        mediumTasks: [],
-        hardTasks: []
-      };
-  
-      schedule.easyTasks = tasks
-        .filter(task => task.difficulty === 'Fácil')
-        .map(task => {
-          return {
-            ...task.toObject(),
-            time: Math.round(easyPercentage * totalTime)
-          };
-        });
-  
-      schedule.mediumTasks = tasks
-        .filter(task => task.difficulty === 'Médio')
-        .map(task => {
-          return {
-            ...task.toObject(),
-            time: Math.round(mediumPercentage * totalTime)
-          };
-        });
-  
-      schedule.hardTasks = tasks
-        .filter(task => task.difficulty === 'Difícil')
-        .map(task => {
-          return {
-            ...task.toObject(),
-            time: Math.round(hardPercentage * totalTime)
-          };
-        });
-  
-      res.json(schedule);
-    } catch (error) {
-      res.status(500).send('Erro ao gerar o cronograma');
-    }
+
+    schedule.mediumTasks = tasks
+      .filter(task => task.difficulty === 'medium')
+      .map(task => {
+        return {
+          ...task.toObject(),
+          time: Math.round(availableTime * mediumPercentage * (task.hours / totalMediumTime))
+        };
+      });
+
+    schedule.hardTasks = tasks
+      .filter(task => task.difficulty === 'hard')
+      .map(task => {
+        return {
+          ...task.toObject(),
+          time: Math.round(availableTime * hardPercentage * (task.hours / totalHardTime))
+        };
+      });
+
+    res.json(schedule);
+  } catch (error) {
+    res.status(500).send('Error generating schedule');
+  }
   };
 };
