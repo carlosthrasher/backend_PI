@@ -1,19 +1,14 @@
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 
 const User = require("../models/User");
 
-const getUserByToken = require('../helpers/get-user-by-token')
-const getToken = require('../helpers/get-token')
-const createUserToken = require('../helpers/create-user-token')
+const authenticateUser = require('../helpers/authenticateUser')
 
 module.exports = class UserController {
   static async register(req, res) {
     const name = req.body.name;
     const email = req.body.email;
-   
     const password = req.body.password;
-   
 
     // validations
     if (!name) {
@@ -53,7 +48,7 @@ module.exports = class UserController {
     try {
       const newUser = await user.save();
 
-      await createUserToken(newUser, req, res);
+      await authenticateUser(newUser, req, res);
       res.status(200).json("feito")
     } catch (error) {
       res.status(500).json({ message: error });
@@ -92,7 +87,7 @@ module.exports = class UserController {
       return res.status(422).json({ message: "Senha inválida" });
     }
 
-    await createUserToken(user, req, res);
+    await authenticateUser(user, req, res);
   }
 
   

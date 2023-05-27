@@ -19,5 +19,13 @@
     "mongoose": "^7.2.0",
     "nodemon": "^2.0.22"
   },
-  "devDependencies": {}
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/carlosthrasher/backend_PI.git"
+  },
+  "bugs": {
+    "url": "https://github.com/carlosthrasher/backend_PI/issues"
+  },
+  "homepage": "https://github.com/carlosthrasher/backend_PI#readme"
 }

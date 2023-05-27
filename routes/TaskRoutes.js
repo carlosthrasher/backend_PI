@@ -1,14 +1,14 @@
-const router = require('express').Router()
+// routes/taskRoutes.js
 
-const TaskController = require('../controllers/TaskController')
+const express = require('express');
+const router = express.Router();
+const taskController = require('../controllers/TaskController');
 
+const { authenticateUser } = require('../helpers/authenticateUser');
 
-const checkToken = require('../helpers/check-token')
-
-router.post('/createTask', checkToken, TaskController.createTask)
-router.patch('/update/:id', checkToken, TaskController.updateById)
-router.delete('/delete/:id', checkToken, TaskController.deleteById)
-router.get('/createSchedule/:id', checkToken, TaskController.createSchedule)
+router.get('/', authenticateUser, taskController.getTasks);
+router.post('/', authenticateUser, taskController.createTask);
+router.patch('/:id', authenticateUser, taskController.updateTask);
+router.delete('/:id', authenticateUser, taskController.deleteTask);
 
 module.exports = router
-

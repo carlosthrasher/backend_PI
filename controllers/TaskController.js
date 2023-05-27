@@ -1,122 +1,57 @@
-const Task = require("../models/Task");
+// controllers/taskController.js
 
-//const authenticateToken = require("../helpers/authenticate-token");
+const Task = require('../models/Task');
 
-module.exports = class TaskController {
-  // Create a new task
+module.exports = class Tasks { 
+  static async getTasks(req, res) {
+    const { userId } = req.user; // Assuming you have implemented user authentication middleware
+  
+    try {
+      const tasks = await Task.find({ user: userId }).exec();
+      res.json(tasks);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to get tasks' });
+    }
+  }
+  
   static async createTask(req, res) {
+    const { userId } = req.user; // Assuming you have implemented user authentication middleware
+    const { title, difficulty } = req.body;
+  
     try {
-      const task = new Task({
-        user: req.user.id,
-        name: req.body.name,
-        difficulty: req.body.difficulty,
-        hours: req.body.hours,
-      });
-      await task.save();
-      res.status(201).send("Tarefa Criada");
+      const task = await Task.create({ user: userId, title, difficulty });
+      res.json(task);
     } catch (error) {
-      res.status(500).send("Erro ao criar tarefa");
+      res.status(500).json({ error: 'Failed to create task' });
     }
   }
-
-  // Update a task (/tasks/:id')
-  static async updateById(req, res) {
-    const task = await Task.findOneAndUpdate(
-      { _id: req.params.id, user: req.user.id },
-      {
-        name: req.body.name,
-        difficulty: req.body.difficulty,
-        hours: req.body.hours,
-      },
-      { new: true }
-    );
-    if (!task) {
-      return res.status(404).send("Tarefa não encontrada");
-    }
-    res.send("Tarefa atualizada");
-  }
-  catch(error) {
-    res.status(500).send("Erro ao atualizar");
-  }
-  //delete task '/tasks/:id
-  static async deleteById(req, res) {
+  
+  static async updateTask(req, res) {
+    const { id } = req.params;
+    const { title, difficulty } = req.body;
+  
     try {
-      const task = await Task.findOneAndDelete({
-        _id: req.params.id,
-        user: req.user.id,
-      });
-      if (!task) {
-        return res.status(404).send("Tarefa não encontrada");
+      const updatedTask = await Task.findByIdAndUpdate(id, { title, difficulty }, { new: true }).exec();
+      if (!updatedTask) {
+        return res.status(404).json({ error: 'Task not found' });
       }
-      res.send("Tarefa Deletada");
+      res.json(updatedTask);
     } catch (error) {
-      res.status(500).send("Erro ao deletar");
+      res.status(500).json({ error: 'Failed to update task' });
     }
   }
-
-  static async createSchedule(req, res) {
+  
+  static async deleteTask(req, res) {
+    const { id } = req.params;
+  
     try {
-    const tasks = await Task.find({ user: req.user.id });
-
-    // Calculate the total time for each difficulty level
-    let totalEasyTime = 0;
-    let totalMediumTime = 0;
-    let totalHardTime = 0;
-    tasks.forEach(task => {
-      if (task.difficulty === 'easy') {
-        totalEasyTime += task.hours;
-      } else if (task.difficulty === 'medium') {
-        totalMediumTime += task.hours;
-      } else if (task.difficulty === 'hard') {
-        totalHardTime += task.hours;
+      const deletedTask = await Task.findByIdAndDelete(id).exec();
+      if (!deletedTask) {
+        return res.status(404).json({ error: 'Task not found' });
       }
-    });
-
-    // Calculate the percentage of time for each difficulty level
-    const totalTime = totalEasyTime + totalMediumTime + totalHardTime;
-    const easyPercentage = totalEasyTime / totalTime;
-    const mediumPercentage = totalMediumTime / totalTime;
-    const hardPercentage = totalHardTime / totalTime;
-
-    // Distribute the available time based on difficulty levels
-    const user = await User.findById(req.user.id);
-    const availableTime = user.availableTime;
-    const schedule = {
-      easyTasks: [],
-      mediumTasks: [],
-      hardTasks: []
-    };
-
-    schedule.easyTasks = tasks
-      .filter(task => task.difficulty === 'easy')
-      .map(task => {
-        return {
-          ...task.toObject(),
-          time: Math.round(availableTime * easyPercentage * (task.hours / totalEasyTime))
-        };
-      });
-
-    schedule.mediumTasks = tasks
-      .filter(task => task.difficulty === 'medium')
-      .map(task => {
-        return {
-          ...task.toObject(),
-          time: Math.round(availableTime * mediumPercentage * (task.hours / totalMediumTime))
-        };
-      });
-
-    schedule.hardTasks = tasks
-      .filter(task => task.difficulty === 'hard')
-      .map(task => {
-        return {
-          ...task.toObject(),
-          time: Math.round(availableTime * hardPercentage * (task.hours / totalHardTime))
-        };
-      });
-
-    res.json(schedule);
-  } catch (error) {
-    res.status(500).send('Error generating schedule');
+      res.json(deletedTask);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to delete task' });
+    }
   }
-  };
-};
+}

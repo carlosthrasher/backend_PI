@@ -1,18 +1,14 @@
 const mongoose = require('mongoose');
 
-const taskSchema = new mongoose.Schema({
+const availableTimeSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
-  name: {
+  day: {
     type: String,
+    enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
     required: true,
-  },
-  difficulty: {
-    type: String,
-    enum: ['easy', 'medium', 'difficult'],
-    default: 'medium',
   },
   time: {
     type: Number,
@@ -20,4 +16,4 @@ const taskSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('Task', taskSchema);
+module.exports = mongoose.model('AvailableTime', availableTimeSchema);
